@@ -240,6 +240,11 @@ function initButtons() {
           textarea.value = '';
           textarea.dispatchEvent(new Event('input'));
         }
+        // Un "Nuevo análisis" explícito sí debe olvidar el resultado guardado.
+        try {
+          sessionStorage.removeItem('denofa_lastResult');
+          sessionStorage.removeItem('denofa_lastInputText');
+        } catch (e) {}
         showState('state-input');
       } else {
         window.location.href = '/';
@@ -249,8 +254,8 @@ function initButtons() {
 
   if (btnDetalle) {
     btnDetalle.addEventListener('click', (e) => {
-      // En desktop (> 768px): comportamiento normal del <a>, sin tocar nada.
-      if (!window.matchMedia('(max-width: 768px)').matches) return;
+      // En desktop (> 1023px): comportamiento normal del <a>, sin tocar nada.
+      if (!window.matchMedia('(max-width: 1023px)').matches) return;
 
       // En móvil: animación de salida antes de navegar.
       e.preventDefault();
@@ -322,11 +327,49 @@ export function renderResult(result) {
   initButtons();
 }
 
+/**
+ * Restaura el último análisis (texto + resultado) cuando el usuario vuelve
+ * a "/" desde /detalle/ (botón "Volver" → history.back()). Sin esto, esa
+ * navegación recarga index.html desde cero y se pierde todo: el texto
+ * escrito y el resumen del resultado ya calculado.
+ */
+function restoreLastAnalysisIfAny() {
+  let savedResult;
+  try {
+    savedResult = sessionStorage.getItem('denofa_lastResult');
+  } catch (e) {
+    return;
+  }
+  if (!savedResult) return;
+
+  let result;
+  try {
+    result = JSON.parse(savedResult);
+  } catch (e) {
+    return;
+  }
+
+  const savedText = sessionStorage.getItem('denofa_lastInputText') || '';
+  const textarea = document.getElementById('main-textarea');
+  if (textarea && savedText) {
+    textarea.value = savedText;
+    textarea.dispatchEvent(new Event('input'));
+  }
+
+  // Evita que initMobileTabs() (en home.js) fuerce la pestaña "Entrada"
+  // por defecto cuando en realidad acabamos de restaurar un resultado.
+  window.__denofaRestored = true;
+
+  renderResult(result);
+  showState('state-result');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // En index.html: inicializar tick marks del gauge idle y configurar event listeners de botones
   if (document.getElementById('gauge-column')) {
     buildTicks();
     initButtons();
+    restoreLastAnalysisIfAny();
   }
 
   // En resultado.html (página standalone, sin left-column de la SPA):

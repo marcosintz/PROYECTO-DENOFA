@@ -540,9 +540,23 @@ mark.highlight--gray {
 
 .actions-row {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-sm);
   align-items: center;
   width: 100%;
+}
+
+/* Si no caben los 3 botones en una fila, se ajustan primero los outline
+   (Texto/Imagen, reduciendo hasta min-width); si aun así no alcanza,
+   el botón que corresponda baja a su propia línea. */
+.actions-row .btn--outline {
+  flex: 0 1 auto;
+  min-width: 100px;
+}
+
+.actions-row .btn--primary {
+  flex: 1 1 auto;
+  min-width: 140px;
 }
 
 .url-preview {
@@ -840,6 +854,30 @@ h1 + .subtitle-rotator,
 }
 
 /* (Gauge animation removed as gauge hides entirely in loading) */
+
+/* ── Móvil/Tablet (<1024px): sincronizar alturas de Entrada/Resultado ──
+   Sin esto, #left-column y #gauge-column no tienen una altura definida:
+   cada uno toma la altura de su propio contenido, así que la tarjeta
+   "salta" de tamaño al cambiar de pestaña (Entrada vs Resultado).
+   Además, sin altura real, .textarea-wrap (flex:1 dentro de un padre sin
+   alto) puede colapsar a casi 0px, lo que "bloquea" la escritura y hace
+   que la vista previa de imagen (position:absolute; inset:0) se vea
+   diminuta, porque hereda esa altura casi nula.
+────────────────────────────────────────────────────────────────────── */
+@media (max-width: 1023px) {
+  #left-column,
+  #gauge-column {
+    min-height: 420px;
+  }
+
+  /* min-height más bajo (antes 240px fijo) para que la caja pueda
+     encogerse cuando los botones bajan a una segunda línea, y estirarse
+     de vuelta cuando caben en una sola — flex:1 hace el resto. */
+  .textarea-wrap {
+    flex: 1 1 auto;
+    min-height: 140px;
+  }
+}
 
 /* ── Desktop: 2 columnas reales ──────── */
 @media (min-width: 1024px) {
@@ -2080,7 +2118,11 @@ h1 + .subtitle-rotator,
 }
 
 /* ── SELECTOR DE PESTAÑAS MÓVIL ────────────────────────── */
-@media (max-width: 768px) {
+/* Debe coincidir con el breakpoint de layout-two-columns (min-width:1024px):
+   por debajo de 1024px el layout es de una sola columna, así que en TODO
+   ese rango necesitamos las pestañas Entrada/Resultado para no mostrar
+   ambos bloques apilados (texto + score) al mismo tiempo. */
+@media (max-width: 1023px) {
   .mobile-tabs {
     display: flex !important;
     background-color: var(--color-surface-input);

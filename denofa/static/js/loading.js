@@ -173,6 +173,15 @@ export function runSteps(type) {
     setTimeout(() => {
       // If SPA mode (index.html with gauge-column)
       if (document.getElementById('gauge-column')) {
+        // Guardamos el último resultado + el texto de entrada para poder
+        // restaurarlos si el usuario navega a /detalle/ y luego usa
+        // "Volver" (esto recarga la página y perdía todo el estado).
+        try {
+          sessionStorage.setItem('denofa_lastResult', JSON.stringify(backendResult));
+          sessionStorage.setItem('denofa_lastInputText', textValue);
+        } catch (e) {
+          // sessionStorage puede fallar en modo incógnito/privado: no es crítico.
+        }
         renderResult(backendResult);
         showState('state-result');
       } else {

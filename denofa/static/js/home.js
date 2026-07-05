@@ -5,6 +5,19 @@
 import { detectContentType } from './utils.js';
 import { runSteps } from './loading.js';
 
+// Si el usuario navega a /detalle/ (se agrega 'page-exit' para el efecto de
+// salida) y luego vuelve, el navegador a veces restaura esta página desde
+// bfcache en vez de recargarla — y 'page-exit' se queda pegada, dejando la
+// página invisible (opacity:0) para siempre. 'pageshow' se dispara tanto en
+// cargas normales como en restauraciones desde bfcache, así que es el único
+// lugar confiable para limpiar esa clase en ambos casos.
+window.addEventListener('pageshow', () => {
+  const pageCanvas = document.querySelector('.page-canvas');
+  if (pageCanvas) {
+    pageCanvas.classList.remove('page-exit');
+  }
+});
+
 /**
  * Coordina la visualización de estados en la nueva estructura de dos columnas.
  */
@@ -220,14 +233,30 @@ function initUploadButton() {
   const btnAnalyze = document.getElementById('btn-analyze');
   if (!btn || !input) return;
 
+  // Guard: evita que el selector de archivos se abra dos veces si el
+  // click llega a dispararse más de una vez (doble binding, doble tap, etc.)
+  let dialogOpen = false;
+
   btn.addEventListener('click', () => {
+    if (dialogOpen) return;
+    dialogOpen = true;
+    // Limpiar el valor antes de abrir, así el usuario puede volver a
+    // elegir el mismo archivo y el evento 'change' se dispara igual.
+    input.value = '';
     input.click();
   });
 
   input.addEventListener('change', (e) => {
+    dialogOpen = false;
     if (e.target.files && e.target.files.length > 0) {
       showImagePreview(e.target.files[0]);
     }
+  });
+
+  // Si el usuario cancela el diálogo, 'change' no se dispara nunca,
+  // así que liberamos el guard cuando la ventana recupera el foco.
+  window.addEventListener('focus', () => {
+    dialogOpen = false;
   });
 
   const btnRemove = document.getElementById('btn-remove-image');
@@ -334,7 +363,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function isMobileLayout() {
-  return window.matchMedia('(max-width: 768px)').matches;
+  // Debe coincidir con el breakpoint de .layout-two-columns / .mobile-tabs (1024px).
+  return window.matchMedia('(max-width: 1023px)').matches;
 }
 
 function setMobileTab(tab) {
@@ -351,7 +381,11 @@ function initMobileTabs() {
   document.querySelectorAll('.mobile-tab').forEach(btn => {
     btn.addEventListener('click', () => setMobileTab(btn.dataset.tab));
   });
-  setMobileTab('entrada');
+  // No forzar "Entrada" si resultado.js ya restauró un análisis previo
+  // (por ejemplo al volver desde /detalle/ con el botón "Volver").
+  if (!window.__denofaRestored) {
+    setMobileTab('entrada');
+  }
 }
 
 
