@@ -1,0 +1,333 @@
+{% extends 'base/_base.html' %}
+{% load static %}
+
+{% block title %}DenoFA - ¿Es esto real?{% endblock %}
+
+{% block content %}
+<section class="page-canvas">
+  <div class="container" style="display:flex; flex-direction:column; align-items:center;">
+    
+    <header style="text-align: center; margin-bottom: var(--space-xl);">
+      <h1 style="margin-bottom: var(--space-sm);">¿Es esto real?</h1>
+      <p class="subtitle-rotator">
+        <span id="rotator-text"></span>
+      </p>
+    </header>
+
+    <div class="stats-row">
+      <div class="stats-row__item">
+        <img src="{% static 'images/icons/scan.png' %}"
+          alt="" aria-hidden="true"
+          class="stats-row__icon">
+        <span class="stats-row__label">
+          Detección automática
+        </span>
+      </div>
+
+      <div class="stats-row__item">
+        <img src="{% static 'images/icons/time.png' %}"
+          alt="" aria-hidden="true"
+          class="stats-row__icon">
+        <span class="stats-row__label">
+          Análisis rápido
+        </span>
+      </div>
+
+      <div class="stats-row__item">
+        <img src="{% static 'images/icons/chart-bar.png' %}"
+          alt="" aria-hidden="true"
+          class="stats-row__icon">
+        <span class="stats-row__label">
+          Score de confianza
+        </span>
+      </div>
+    </div>
+
+    <div class="card layout-two-columns" style="position:relative;">
+      
+      <!-- ══ COLUMNA IZQUIERDA: Formulario ══════════════════ -->
+      <div id="left-column" class="left-column" style="display: flex; flex-direction: column;">
+        <div id="state-input" class="state-panel state--active" style="display: flex; flex-direction: column; gap: var(--space-md); flex: 1;">
+          <div class="textarea-wrap" style="display: flex; flex-direction: column; flex: 1; position: relative;">
+            <textarea id="main-textarea" class="textarea" placeholder="Pega aquí el texto de la noticia, un enlace web o sube una captura de pantalla..." maxlength="5000" aria-label="Contenido a verificar" style="flex: 1; min-height: 0; resize: none;"></textarea>
+            <!-- Preview de imagen: se superpone al textarea cuando hay imagen -->
+            <div id="image-preview-wrap" style="display:none; position:absolute; inset:0; border-radius: inherit; overflow:hidden; background: var(--color-surface);">
+              <img id="image-preview" src="" alt="Vista previa de la imagen" style="width:100%; height:100%; object-fit:contain; display:block;">
+              <button id="btn-remove-image" type="button" aria-label="Quitar imagen" style="position:absolute; top:8px; right:8px; background:rgba(0,0,0,0.55); color:white; border:none; border-radius:50%; width:28px; height:28px; cursor:pointer; font-size:18px; line-height:1; display:flex; align-items:center; justify-content:center;">×</button>
+            </div>
+            <span id="char-counter" class="char-counter" aria-live="polite">0 / 5000</span>
+          </div>
+
+          <p id="input-validation-msg" style="font-size: var(--font-size-xs); color: var(--color-text-faint); margin: 0; transition: color 0.3s ease;">
+            Mínimo 20 caracteres. No se admiten URLs de redes sociales, usa la opción de imagen.
+          </p>
+
+          <div class="actions-row">
+            <button id="btn-paste" class="btn btn--outline" style="flex: 0 0 auto;" aria-label="Pegar contenido">
+              <svg width="18" height="20" viewBox="0 0 18 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <rect x="4" y="3" width="10" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M6 3V2a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              Texto
+            </button>
+            <button id="btn-upload" class="btn btn--outline" style="flex: 0 0 auto;" aria-label="Subir imagen">
+              <svg width="16" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M8 13V5M8 5l-3 3M8 5l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M1 17h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              Imagen
+            </button>
+            <button id="btn-analyze" class="btn btn--primary btn--disabled" disabled aria-label="Analizar contenido" style="flex: 1;">
+              Analizar
+            </button>
+          </div>
+
+          <input type="file" id="file-input" accept="image/*" style="display:none;" aria-hidden="true">
+        </div>
+
+
+      </div>
+
+      <!-- ══ COLUMNA DERECHA: Estados (Gauge, Loading, Result) ════════════════ -->
+      <div id="gauge-column" class="gauge-column right-column">
+
+        <!-- SUB-ESTADO REPOSO / GAUGE CONTENEDOR -->
+        <!-- Será visible en Idle y en Resultado. Se oculta en Loading. -->
+        <div id="state-right-gauge" class="sub-state state--active" style="display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%;">
+          
+          <span id="verdict-badge" class="badge badge--reliable gauge-badge--hidden" aria-live="polite">
+            CONFIABLE
+          </span>
+
+          <div class="gauge-wrapper gauge--idle" aria-label="Medidor de confiabilidad" role="img" id="gauge-wrapper">
+            <svg id="gauge-svg" class="gauge-svg" viewBox="0 0 260 145" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <defs>
+                <mask id="gauge-mask">
+                  <path id="gauge-mask-arc" d="M 20 130 A 110 110 0 0 1 240 130" fill="none" stroke="#ffffff" stroke-width="24" stroke-linecap="round" stroke-dasharray="0 346" stroke-dashoffset="0"/>
+                </mask>
+              </defs>
+              <path id="gauge-track" d="M 20 130 A 110 110 0 0 1 240 130" fill="none" stroke="var(--color-border)" stroke-width="22" stroke-linecap="round"/>
+              <g mask="url(#gauge-mask)">
+                <path id="gauge-seg-disinfo" d="M 20 130 A 110 110 0 0 1 240 130" fill="none" stroke="var(--color-disinfo)" stroke-width="22" stroke-linecap="round" stroke-dasharray="134.78 346" stroke-dashoffset="0"/>
+                <path id="gauge-seg-dubious" d="M 20 130 A 110 110 0 0 1 240 130" fill="none" stroke="var(--color-dubious)" stroke-width="22" stroke-linecap="round" stroke-dasharray="103.68 346" stroke-dashoffset="-134.78"/>
+                <path id="gauge-seg-reliable" d="M 20 130 A 110 110 0 0 1 240 130" fill="none" stroke="var(--color-reliable)" stroke-width="22" stroke-linecap="round" stroke-dasharray="107.14 346" stroke-dashoffset="-238.46"/>
+              </g>
+              <g id="gauge-ticks" class="gauge-ticks"></g>
+              <g id="gauge-needle-group" transform="rotate(0 130 130)">
+                <circle cx="20" cy="130" r="10" fill="#ffffff" stroke="#1e293b" stroke-width="4"/>
+              </g>
+            </svg>
+            <div class="gauge-score-display">
+              <span id="gauge-score-num" class="gauge-score__num gauge-score__num--idle">0</span>
+              <span class="gauge-score__label">%</span>
+            </div>
+          </div>
+
+          <!-- Detalles adicionales del resultado (explicación, fragmentos, botones) -->
+          <!-- Esto se muestra desde el inicio para que no se mueva el diseño (inducción) -->
+          <div id="state-result-content" style="display: flex; width: 100%; margin-top: 48px; flex-direction: column; gap: var(--space-lg); flex: 1;">
+            <section aria-labelledby="summary-heading">
+              <h3 id="summary-heading" style="font-size: 13px; font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: var(--space-sm);">Desglose del análisis</h3>
+              <div id="summary-percentages" style="display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); font-size: var(--font-size-label); font-weight: var(--font-weight-medium);">
+                <span style="color: var(--color-reliable); opacity: 0.5;">• 0% confiabilidad</span>
+                <span style="color: var(--color-text-faint);">·</span>
+                <span style="color: var(--color-dubious); opacity: 0.5;">• 0% dudoso</span>
+                <span style="color: var(--color-text-faint);">·</span>
+                <span style="color: var(--color-disinfo); opacity: 0.5;">• 0% falso</span>
+              </div>
+            </section>
+
+            <section aria-labelledby="fragments-heading" style="margin-top: var(--space-sm);">
+              <div class="fragments-header" style="margin-bottom: var(--space-sm);">
+                <h3 id="fragments-heading" class="fragments-title" style="font-size: 13px; font-weight: var(--font-weight-bold); text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted);">Análisis de fragmentos</h3>
+              </div>
+              <div id="fragments-tags" class="fragments-tags" style="display: flex; flex-direction: column; gap: var(--space-xs);">
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: rgba(34, 197, 94, 0.05); border-radius: 8px; border-left: 4px solid var(--color-reliable); opacity: 0.5;">
+                  <span style="font-weight: 500; color: var(--color-text-muted);">Fragmentos confiables</span>
+                  <span style="font-weight: 700; color: var(--color-reliable); font-size: 16px;">0</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: rgba(234, 179, 8, 0.05); border-radius: 8px; border-left: 4px solid var(--color-dubious); opacity: 0.5;">
+                  <span style="font-weight: 500; color: var(--color-text-muted);">Fragmentos sospechosos</span>
+                  <span style="font-weight: 700; color: var(--color-dubious); font-size: 16px;">0</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: rgba(239, 68, 68, 0.05); border-radius: 8px; border-left: 4px solid var(--color-disinfo); opacity: 0.5;">
+                  <span style="font-weight: 500; color: var(--color-text-muted);">Fragmentos falsos</span>
+                  <span style="font-weight: 700; color: var(--color-disinfo); font-size: 16px;">0</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Botones de acción: se muestran SOLO cuando hay resultado -->
+            <div id="result-actions" style="display: none; margin-top: auto; flex-direction: row; gap: var(--space-sm); width: 100%;">
+              <button id="btn-nueva-consulta" class="btn btn--outline" style="flex:1; min-height: var(--height-btn-primary);" aria-label="Nuevo análisis">
+                Nuevo análisis
+              </button>
+              <a id="btn-ver-detalle" href="/detalle/" class="btn btn--primary" style="flex:1; text-align: center; text-decoration: none; min-height: var(--height-btn-primary);" aria-label="Ver análisis detallado">
+                Ver detalles
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- SUB-ESTADO CARGANDO -->
+        <div id="state-loading" class="sub-state" style="display: none; flex-direction: column; width: 100%; height: 100%; justify-content: center; gap: var(--space-lg);">
+          <div id="loading-default" style="display: none; flex-direction: column; align-items: center;">
+            <div class="spinner-wrap">
+              <div class="spinner" role="status" aria-label="Cargando"></div>
+            </div>
+          </div>
+          <div id="loading-text-anim" style="display: none;">
+            {% include 'animations/scanner-text.html' %}
+          </div>
+          <div id="loading-image-anim" style="display: none;">
+            {% include 'animations/scanner-image.html' %}
+          </div>
+          <div id="loading-url-anim" style="display: none;">
+            {% include 'animations/scanner-url.html' %}
+          </div>
+          <h2 style="font-size: 18px;">Analizando contenido...</h2>
+          <p style="font-family: var(--font-serif); font-size: 14px; color: var(--color-text-muted);">
+            Estamos verificando la información. Esto puede tardar unos segundos.
+          </p>
+          
+          <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar__fill progress-bar__fill--loading"></div>
+          </div>
+
+          <ul id="steps-list" class="steps-list" aria-live="polite" aria-label="Pasos de verificación"></ul>
+        </div>
+
+      </div><!-- /#gauge-column -->
+
+    </div>
+
+    <!-- SECCIÓN INFORMATIVA: Más que un detector -->
+    <div class="features-section">
+      <header class="features-header">
+        <h2 class="features-title">Más que un detector: un identificador detallado de noticias falsas que afectan a la sociedad</h2>
+        <p style="text-align: center; color: var(--color-text-faint); margin-top: var(--space-sm); font-size: var(--font-size-body); font-family: var(--font-serif); max-width: 800px; margin-left: auto; margin-right: auto;">Más allá de un número: análisis por fragmento, fuentes identificadas y el porqué detrás de cada veredicto.</p>
+      </header>
+
+      <div class="detector-cards-grid">
+        <div class="card feature-card">
+          <div class="feature-card__img-wrap">
+            <img src="{% static 'images/presentacion/fragmento_subrayado.png' %}" alt="Fragmentos resaltados" class="feature-card__img">
+          </div>
+          <div class="feature-card__content">
+            <h3 class="feature-card__title">Fragmentos resaltados por nivel de confianza</h3>
+            <p class="feature-card__text">Cada parte sospechosa del texto se resalta en rojo, ámbar o verde, igual que el sistema de colores del medidor principal. Así podrás identificar de inmediato qué secciones de la noticia necesitan mayor atención.</p>
+          </div>
+        </div>
+
+        <div class="card feature-card">
+          <div class="feature-card__img-wrap">
+            <img src="{% static 'images/presentacion/score.jpeg' %}" alt="Score claro" class="feature-card__img">
+          </div>
+          <div class="feature-card__content">
+            <h3 class="feature-card__title">Un score claro, no solo una opinión</h3>
+            <p class="feature-card__text">DenoFA entrega un puntaje de 0 a 100 junto con un veredicto estructurado (Confiable, Dudoso o Probable desinformación). Este resultado se basa en el cruce exhaustivo de fuentes reales, alejándose de impresiones genéricas.</p>
+          </div>
+        </div>
+
+        <div class="card feature-card card-wide">
+          <div class="feature-card__img-wrap feature-card__img-wrap--wide">
+            <img src="{% static 'images/presentacion/noticia.jpeg' %}" alt="Verificación con fuentes" class="feature-card__img">
+          </div>
+          <div class="feature-card__content">
+            <h3 class="feature-card__title">Verificación con fuentes reales</h3>
+            <p class="feature-card__text">Nuestro análisis se respalda realizando búsquedas reales y verificadas en internet, no en suposiciones del modelo. Las fuentes y enlaces consultados se muestran de forma transparente junto al resultado de cada análisis.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- SECCIÓN: Cómo funciona la verificación en DenoFA -->
+    <div class="info-section">
+      <div class="card section-card">
+        <div class="how-it-works">
+
+          <!-- Col izquierda: título + párrafo + estadísticas -->
+          <div class="how-it-works__lead">
+            <h2 class="how-it-works__title">Cómo funciona la verificación en DenoFA</h2>
+            <p class="how-it-works__body">DenoFA no se basa en una sola señal. Cruzamos el lenguaje del texto con fuentes reales obtenidas mediante búsqueda en internet para entregar un resultado respaldado por evidencia. Cada veredicto incluye fragmentos concretos del texto analizado y las fuentes que lo sustentan, para que puedas entender el porqué, no solo el qué.</p>
+            <div class="how-it-works__stats">
+              <span class="how-it-works__stat">Verificación apoyada en búsqueda real en internet</span>
+              <span class="how-it-works__stat-sep">·</span>
+              <span class="how-it-works__stat">Score de 0 a 100 + veredicto explícito</span>
+              <span class="how-it-works__stat-sep">·</span>
+              <span class="how-it-works__stat">Fragmentos resaltados por nivel de confianza</span>
+            </div>
+          </div>
+
+          <!-- Col derecha: 3 pasos apilados -->
+          <div class="how-it-works__steps">
+            <div class="step-card step-card--inner">
+              <span class="step-card__num">01</span>
+              <div class="step-card__body">
+                <h3 class="step-card__title">Análisis de lenguaje</h3>
+                <p class="step-card__text">Identificamos patrones típicos de desinformación: alarmismo, ausencia de fuentes, afirmaciones extremas sin respaldo verificable.</p>
+              </div>
+            </div>
+            <div class="step-card step-card--inner">
+              <span class="step-card__num">02</span>
+              <div class="step-card__body">
+                <h3 class="step-card__title">Verificación cruzada</h3>
+                <p class="step-card__text">El contenido se contrasta con fuentes reales encontradas mediante búsqueda en internet, no con suposiciones del modelo.</p>
+              </div>
+            </div>
+            <div class="step-card step-card--inner">
+              <span class="step-card__num">03</span>
+              <div class="step-card__body">
+                <h3 class="step-card__title">Resultado con evidencia</h3>
+                <p class="step-card__text">Obtén un score, un veredicto claro, y los fragmentos específicos que sustentan la conclusión, con sus fuentes cuando están disponibles.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN: Cómo verificar una noticia con DenoFA -->
+    <div class="info-section">
+      <div class="card section-card">
+        <header class="features-header">
+          <h2 class="features-title">Cómo verificar una noticia con DenoFA</h2>
+          <p class="features-subtitle">Comprueba la credibilidad de cualquier contenido en tres simples pasos</p>
+        </header>
+
+        <div class="steps-columns">
+
+          <div class="steps-col-card steps-col-card--inner">
+            <span class="step-card__num">1</span>
+            <h3 class="steps-col-card__title">Pega tu contenido</h3>
+            <p class="steps-col-card__text">Pega el texto directamente, una URL, o sube una imagen de la noticia que quieres verificar.</p>
+          </div>
+
+          <div class="steps-col-card steps-col-card--inner">
+            <span class="step-card__num">2</span>
+            <h3 class="steps-col-card__title">Ejecuta el análisis</h3>
+            <p class="steps-col-card__text">DenoFA cruza la información con fuentes reales y evalúa patrones de desinformación en segundos.</p>
+          </div>
+
+          <div class="steps-col-card steps-col-card--inner">
+            <span class="step-card__num">3</span>
+            <h3 class="steps-col-card__title">Revisa el resultado</h3>
+            <p class="steps-col-card__text">Obtén un score, el veredicto, y los fragmentos exactos que respaldan la conclusión.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{% static 'js/utils.js' %}?v=2"></script>
+<script type="module" src="{% static 'js/loading.js' %}?v=2"></script>
+<script type="module" src="{% static 'js/resultado.js' %}?v=2"></script>
+<script type="module" src="{% static 'js/home.js' %}?v=2"></script>
+{% endblock %}
