@@ -233,31 +233,29 @@ function initUploadButton() {
   const btnAnalyze = document.getElementById('btn-analyze');
   if (!btn || !input) return;
 
-  // Guard: evita que el selector de archivos se abra dos veces si el
-  // click llega a dispararse más de una vez (doble binding, doble tap, etc.)
-  let dialogOpen = false;
+  let launchCooldown = false;
 
-  btn.addEventListener('click', () => {
-    if (dialogOpen) return;
-    dialogOpen = true;
-    // Limpiar el valor antes de abrir, así el usuario puede volver a
-    // elegir el mismo archivo y el evento 'change' se dispara igual.
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (launchCooldown) return;
     input.value = '';
     input.click();
   });
 
   input.addEventListener('change', (e) => {
-    dialogOpen = false;
     if (e.target.files && e.target.files.length > 0) {
       showImagePreview(e.target.files[0]);
     }
   });
 
-  // Si el usuario cancela el diálogo, 'change' no se dispara nunca,
-  // así que liberamos el guard cuando la ventana recupera el foco.
+  // Prevenir "ghost clicks" cuando se cierra el explorador de archivos
   window.addEventListener('focus', () => {
-    dialogOpen = false;
+    launchCooldown = true;
+    setTimeout(() => {
+      launchCooldown = false;
+    }, 400);
   });
+
 
   const btnRemove = document.getElementById('btn-remove-image');
   if (btnRemove) {
