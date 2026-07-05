@@ -384,6 +384,19 @@ function initMobileTabs() {
   if (!window.__denofaRestored) {
     setMobileTab('entrada');
   }
+
+  // Re-sincroniza el tab activo cada vez que se cruza el breakpoint móvil
+  // (1023px), ya que setMobileTab() no hace nada si se ejecuta en desktop.
+  // Sin esto, si la página carga en ancho desktop y luego se cambia a
+  // móvil (resize, rotación, o al alternar el preview), el score queda
+  // visible debajo del formulario hasta que el usuario toca una pestaña.
+  const mobileBreakpoint = window.matchMedia('(max-width: 1023px)');
+  mobileBreakpoint.addEventListener('change', (e) => {
+    if (e.matches) {
+      const activeBtn = document.querySelector('.mobile-tab--active');
+      setMobileTab(activeBtn ? activeBtn.dataset.tab : 'entrada');
+    }
+  });
 }
 
 
