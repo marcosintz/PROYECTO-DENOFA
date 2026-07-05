@@ -107,6 +107,9 @@ export function showState(id) {
     const gaugeWrapper = document.getElementById('gauge-wrapper');
     if (gaugeWrapper) gaugeWrapper.style.display = 'block';
   }
+
+  if (id === 'state-input') setMobileTab('entrada');
+  if (id === 'state-loading' || id === 'state-result') setMobileTab('resultado');
 }
 
 /**
@@ -321,6 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initPasteImage();
     initAnalyzeButton();
     initSubtitleRotator();
+    initMobileTabs();
 
     // Construir tick marks del gauge en el estado idle inicial
     if (typeof buildGaugeTicks === 'function') {
@@ -328,6 +332,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 });
+
+function isMobileLayout() {
+  return window.matchMedia('(max-width: 768px)').matches;
+}
+
+function setMobileTab(tab) {
+  if (!isMobileLayout()) return;
+  const leftCol = document.getElementById('left-column');
+  const gaugeCol = document.getElementById('gauge-column');
+  const tabButtons = document.querySelectorAll('.mobile-tab');
+  tabButtons.forEach(b => b.classList.toggle('mobile-tab--active', b.dataset.tab === tab));
+  if (leftCol) leftCol.classList.toggle('mobile-hide', tab !== 'entrada');
+  if (gaugeCol) gaugeCol.classList.toggle('mobile-hide', tab !== 'resultado');
+}
+
+function initMobileTabs() {
+  document.querySelectorAll('.mobile-tab').forEach(btn => {
+    btn.addEventListener('click', () => setMobileTab(btn.dataset.tab));
+  });
+  setMobileTab('entrada');
+}
+
 
 function initSubtitleRotator() {
   const container = document.getElementById('rotator-text');

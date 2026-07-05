@@ -2078,4 +2078,38 @@ h1 + .subtitle-rotator,
     }
   }
 }
+
+/* ── SELECTOR DE PESTAÑAS MÓVIL ────────────────────────── */
+@media (max-width: 768px) {
+  .mobile-tabs {
+    display: flex !important;
+    background-color: var(--color-surface-input);
+    border-radius: var(--radius-pill);
+    padding: 3px;
+    margin-bottom: var(--space-md);
+    width: 100%;
+  }
+
+  .mobile-tab {
+    flex: 1;
+    padding: var(--space-sm);
+    border-radius: calc(var(--radius-pill) - 2px);
+    background: transparent;
+    border: none;
+    font-family: var(--font-sans);
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+  }
+
+  .mobile-tab--active {
+    background-color: var(--color-surface);
+    color: var(--color-brand);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  #left-column.mobile-hide, #gauge-column.mobile-hide {
+    display: none !important;
+  }
+}
+
 

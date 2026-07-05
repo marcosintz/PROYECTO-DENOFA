@@ -45,6 +45,11 @@
 
     <div class="card layout-two-columns" style="position:relative;">
       
+      <div class="mobile-tabs" id="mobile-tabs" style="display: none;">
+        <button type="button" class="mobile-tab mobile-tab--active" data-tab="entrada">Entrada</button>
+        <button type="button" class="mobile-tab" data-tab="resultado">Resultado</button>
+      </div>
+
       <!-- ══ COLUMNA IZQUIERDA: Formulario ══════════════════ -->
       <div id="left-column" class="left-column" style="display: flex; flex-direction: column;">
         <div id="state-input" class="state-panel state--active" style="display: flex; flex-direction: column; gap: var(--space-md); flex: 1;">
@@ -329,5 +334,5 @@
 <script type="module" src="{% static 'js/utils.js' %}?v=2"></script>
 <script type="module" src="{% static 'js/loading.js' %}?v=2"></script>
 <script type="module" src="{% static 'js/resultado.js' %}?v=2"></script>
-<script type="module" src="{% static 'js/home.js' %}?v=2"></script>
+<script type="module" src="{% static 'js/home.js' %}?v=3"></script>
 {% endblock %}
