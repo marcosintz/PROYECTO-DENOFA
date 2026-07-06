@@ -360,6 +360,58 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+
+export function clearInputState() {
+  const textarea = document.getElementById('main-textarea');
+  const counter = document.getElementById('char-counter');
+  const btnAnalyze = document.getElementById('btn-analyze');
+  const previewWrap = document.getElementById('image-preview-wrap');
+  const previewImg = document.getElementById('image-preview');
+  const fileInput = document.getElementById('file-input');
+  const validationMsg = document.getElementById('input-validation-msg');
+
+  if (textarea) {
+    textarea.value = '';
+    textarea.style.display = 'block';
+    textarea.classList.remove('textarea--active');
+  }
+  if (counter) counter.textContent = '0 / 5000';
+  if (previewWrap) previewWrap.style.display = 'none';
+  if (previewImg) previewImg.src = '';
+  if (fileInput) fileInput.value = '';
+  if (btnAnalyze) {
+    btnAnalyze.disabled = true;
+    btnAnalyze.classList.add('btn--disabled');
+  }
+  if (validationMsg) {
+    validationMsg.textContent = 'Mínimo 20 caracteres. No se admiten URLs de redes sociales, usa la opción de imagen.';
+    validationMsg.style.color = 'var(--color-text-faint)';
+  }
+  window.selectedImageFile = null;
+}
+
+export function showErrorModal(message) {
+  const modal = document.getElementById('modal-error');
+  const textEl = document.getElementById('modal-error-text');
+  const btnAccept = document.getElementById('modal-error-accept');
+  if (!modal || !textEl || !btnAccept) {
+    // Fallback por si el modal no está en el DOM (ej. otra página)
+    alert(message);
+    clearInputState();
+    return;
+  }
+
+  textEl.textContent = message;
+  modal.style.display = 'flex';
+
+  const onAccept = () => {
+    modal.style.display = 'none';
+    clearInputState();
+    btnAccept.removeEventListener('click', onAccept);
+  };
+  btnAccept.addEventListener('click', onAccept);
+}
+
 function isMobileLayout() {
   // Debe coincidir con el breakpoint de .layout-two-columns / .mobile-tabs (1024px).
   return window.matchMedia('(max-width: 1023px)').matches;

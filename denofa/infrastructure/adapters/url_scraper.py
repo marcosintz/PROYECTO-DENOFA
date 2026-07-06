@@ -27,5 +27,20 @@ def scrape_url(url: str) -> str:
             raise ValueError("No se pudo extraer texto legible del contenido de la página.")
             
         return clean_text
-    except Exception as e:
-        raise ValueError(f"Error al extraer contenido de la URL: {str(e)}")
+
+    except requests.exceptions.Timeout:
+        raise ValueError("La página tardó demasiado en responder. Intenta con otro enlace.")
+    except requests.exceptions.ConnectionError:
+        raise ValueError("No se pudo conectar con esa página. Verifica que el enlace sea correcto.")
+    except requests.exceptions.HTTPError:
+        status = response.status_code if 'response' in locals() else None
+        if status == 404:
+            raise ValueError("Esa página no existe (enlace roto o eliminado).")
+        elif status == 403:
+            raise ValueError("Esta página bloquea el acceso automático. Copia el texto manualmente o sube una captura.")
+        else:
+            raise ValueError("No se pudo acceder a esa página en este momento.")
+    except ValueError:
+        raise
+    except Exception:
+        raise ValueError("Ocurrió un error inesperado al leer esa página. Intenta de nuevo.")

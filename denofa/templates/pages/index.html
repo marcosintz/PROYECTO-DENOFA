@@ -118,9 +118,7 @@
                 <path id="gauge-seg-reliable" d="M 20 130 A 110 110 0 0 1 240 130" fill="none" stroke="var(--color-reliable)" stroke-width="22" stroke-linecap="round" stroke-dasharray="107.14 346" stroke-dashoffset="-238.46"/>
               </g>
               <g id="gauge-ticks" class="gauge-ticks"></g>
-              <g id="gauge-needle-group" transform="rotate(0 130 130)">
-                <circle cx="20" cy="130" r="10" fill="#ffffff" stroke="#1e293b" stroke-width="4"/>
-              </g>
+              <g id="gauge-needle-group" transform="rotate(0 130 130)"></g>
             </svg>
             <div class="gauge-score-display">
               <span id="gauge-score-num" class="gauge-score__num gauge-score__num--idle">0</span>
@@ -328,6 +326,16 @@
 
   </div>
 </section>
+
+<div id="modal-error" class="modal-overlay" style="display: none;">
+  <div class="modal-card">
+    <h2 class="modal-title" style="color: var(--color-disinfo);">No se pudo analizar</h2>
+    <p class="modal-text" id="modal-error-text">Ocurrió un error.</p>
+    <div class="modal-actions">
+      <button id="modal-error-accept" class="btn btn--primary">Entendido</button>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}

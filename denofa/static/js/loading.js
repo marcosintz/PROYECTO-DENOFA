@@ -3,7 +3,7 @@
  */
 
 
-import { showState, setGaugeLoading } from './home.js';
+import { showState, setGaugeLoading, showErrorModal } from './home.js';
 import { renderResult } from './resultado.js';
 
 const STEPS = {
@@ -160,8 +160,8 @@ export function runSteps(type) {
     hasHandledAnalysis = true;
 
     if (backendError) {
-      alert(backendError);
       showState('state-input');
+      showErrorModal(backendError);
       return;
     }
 
